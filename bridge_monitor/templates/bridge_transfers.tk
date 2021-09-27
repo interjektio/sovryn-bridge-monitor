@@ -1,0 +1,115 @@
+<py:extends href="bridge_monitor:templates/layout.tk">
+
+<div class="content" py:block="content">
+    <h1>Sovryn Bridge Transfers</h1>
+    <nav>
+        Show
+        <py:for each="value in [10, 50, 1000]">
+            ${'|' if value != 10 else ''}<a href="$request.current_route_path(_query={
+                'filter': request.params.get('filter'),
+                'count': value,
+            })">$value</a>
+        </py:for>
+        transfers
+    </nav>
+    <nav>
+        Filters:
+        <a href="$request.current_route_path(_query={
+            'filter': '',
+            'count': request.params.get('count'),
+        })">all</a> |
+        <a href="$request.current_route_path(_query={
+            'filter': 'unprocessed',
+            'count': request.params.get('count'),
+        })">unprocessed</a> |
+        <a href="$request.current_route_path(_query={
+            'filter': 'ignored',
+            'count': request.params.get('count'),
+        })">ignored</a>
+    </nav>
+    <nav>
+        Bridges:
+        <py:for each="(i, bridge_name) in enumerate(transfers_by_bridge.keys())">
+            ${'|' if i != 10 else ''}<a href="$request.current_route_path(_anchor=bridge_name)">$bridge_name</a>
+        </py:for>
+    </nav>
+    <py:for each="bridge_name, transfers in transfers_by_bridge.items()" py:with="updated_on = last_updated_by_bridge[bridge_name]">
+        <div>
+            <a href="#" style="float:right">top</a>
+            <h2 id="$bridge_name">Last $max_transfers $filter_name $bridge_name transfers</h2>
+        </div>
+        <p py:if="updated_on">Updated <time class="timeago" datetime="$updated_on">$updated_on</time></p>
+        <p py:if="not updated_on">Never updated</p>
+
+        <table class="table mb-4">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>from</th>
+                    <th>to</th>
+                    <th>amount</th>
+                    <th>votes</th>
+                    <th>timestamps</th>
+                    <th>details</th>
+                </tr>
+            </thead>
+            <tbody>
+                    <tr py:for="transfer in transfers">
+                        <td>
+                                <i py:if="transfer.ignored"
+                                    class="glyphicon glyphicon-question-sign"
+                                    title="ignored"
+                                    style="color: yellow"
+                                ></i>
+                                <i py:if="transfer.was_processed" class="glyphicon glyphicon-ok" title="processed"></i>
+                                <i py:if="transfer.is_late()"
+                                    class="glyphicon glyphicon-remove"
+                                    title="not processed, late"
+                                    style="color: red"
+                                ></i>
+                        </td>
+                        <td>
+                            $transfer.from_chain
+                            <small>
+                                <br/>
+                                <span title="deposit on $transfer.from_chain block: $transfer.event_block_number">#$transfer.event_block_number</span>
+                            </small>
+                        </td>
+                        <td>
+                            $transfer.to_chain
+                                <small py:if="transfer.executed_block_number">
+                                    <br/>
+                                    <span title="executed on $transfer.to_chain block $transfer.executed_block_number">
+                                        #$transfer.executed_block_number
+                                    </span>
+                                </small>
+                        </td>
+                        <td
+                            title="$transfer.amount_wei wei"
+                        >
+                            <code>$format(transfer.formatted_amount, '.04f')}&nbsp;$transfer.token_symbol</code>
+                        </td>
+                        <td>$transfer.num_votes</td>
+                        <td>
+                            <small>
+                                deposited <time class="timeago" datetime="$transfer.deposited_on.isoformat()">$transfer.created_on</time><br/>
+                                <py:if test="transfer.executed_on">
+                                executed <time class="timeago" datetime="$transfer.executed_on.isoformat()">$transfer.created_on</time><br/>
+                                </py:if>
+                                updated <time class="timeago" datetime="$transfer.updated_on.isoformat()">$transfer.updated_on</time><br/>
+                                first seen <time class="timeago" datetime="$transfer.created_on.isoformat()">$transfer.created_on</time>
+                            </small>
+                        </td>
+                        <td class="details">
+                            <span>TxIdU:</span><code>$transfer.transaction_id</code><br/>
+                            <span>EventTx:</span><code>$transfer.event_transaction_hash</code><br/>
+                            <span>ExecTx:</span><code>$transfer.executed_transaction_hash</code><br/>
+                            <span>Depositor:</span><code>$transfer.depositor_address</code><br/>
+                            <span>Receiver:</span><code>$transfer.receiver_address</code><br/>
+                            <span>ErrorData:</span><code>$transfer.error_data</code>
+                        </td>
+                    </tr>
+            </tbody>
+        </table>
+    </py:for>
+</div>

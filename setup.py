@@ -23,6 +23,7 @@ requires = [
     'zope.sqlalchemy',
     'eth-utils',
     'web3',
+    'tonnikala>=1.0.0b5',
 ]
 
 tests_require = [

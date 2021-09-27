@@ -5,7 +5,7 @@ from bridge_monitor.business_logic.key_value_store import KeyValueStore
 from bridge_monitor.models import Transfer
 
 
-@view_config(route_name='bridge_transfers', renderer='bridge_monitor:templates/bridge_transfers.jinja2')
+@view_config(route_name='bridge_transfers', renderer='bridge_monitor:templates/bridge_transfers.tk')
 def bridge_transfers(request):
     dbsession: Session = request.dbsession
     key_value_store = KeyValueStore(dbsession)
